@@ -30,6 +30,25 @@ export function createAddressPanel(container: HTMLElement): FeaturePanelHandle {
     createField('指定城市', cityInput),
   );
 
+  const fixedPasswordInput = document.createElement('input');
+  fixedPasswordInput.className = 'opx-input';
+  fixedPasswordInput.type = 'text';
+  fixedPasswordInput.placeholder = '留空即使用临时邮箱作为密码';
+  fixedPasswordInput.autocomplete = 'off';
+
+  const fixedPhoneInput = document.createElement('input');
+  fixedPhoneInput.className = 'opx-input';
+  fixedPhoneInput.type = 'text';
+  fixedPhoneInput.placeholder = '留空即使用随机生成的美国手机号';
+  fixedPhoneInput.autocomplete = 'off';
+
+  const settingsGrid = document.createElement('div');
+  settingsGrid.className = 'opx-grid';
+  settingsGrid.append(
+    createField('固定密码', fixedPasswordInput),
+    createField('固定手机号', fixedPhoneInput),
+  );
+
   const buttonRow = document.createElement('div');
   buttonRow.className = 'opx-button-row opx-address-actions';
   const fetchButton = createButton('获取地址');
@@ -44,6 +63,7 @@ export function createAddressPanel(container: HTMLElement): FeaturePanelHandle {
   container.append(
     summary,
     formGrid,
+    settingsGrid,
     buttonRow,
     currentList,
     status,
@@ -51,6 +71,8 @@ export function createAddressPanel(container: HTMLElement): FeaturePanelHandle {
 
   countrySelect.addEventListener('change', () => void saveScopeSettings('国家已保存'));
   cityInput.addEventListener('change', () => void saveScopeSettings('城市已保存'));
+  fixedPasswordInput.addEventListener('change', () => void saveScopeSettings('固定密码已保存'));
+  fixedPhoneInput.addEventListener('change', () => void saveScopeSettings('固定手机号已保存'));
   fetchButton.addEventListener('click', () => void fetchAddress());
 
   const update = async () => {
@@ -65,10 +87,14 @@ export function createAddressPanel(container: HTMLElement): FeaturePanelHandle {
     const current = await loadAddressAutofillSettings();
     const countryCode = countrySelect.value;
     const city = cityInput.value.trim();
+    const fixedPassword = fixedPasswordInput.value.trim();
+    const fixedPhone = fixedPhoneInput.value.trim();
     const scopeChanged = current.countryCode !== countryCode || current.city.trim() !== city;
     const settings = await saveAddressAutofillSettings({
       countryCode,
       city,
+      fixedPassword,
+      fixedPhone,
       lastAddress: scopeChanged ? null : current.lastAddress,
     });
     renderSettings(settings);
@@ -116,6 +142,8 @@ export function createAddressPanel(container: HTMLElement): FeaturePanelHandle {
   function renderSettings(settings: AddressAutofillSettings): void {
     countrySelect.value = settings.countryCode;
     cityInput.value = settings.city;
+    fixedPasswordInput.value = settings.fixedPassword || '';
+    fixedPhoneInput.value = settings.fixedPhone || '';
     renderSummary(settings);
     renderAddress(settings.lastAddress);
   }

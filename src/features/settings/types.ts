@@ -10,6 +10,8 @@ export interface AddressAutofillSettings {
   payPalSignupEnabled: boolean;
   countryCode: string;
   city: string;
+  fixedPassword?: string;
+  fixedPhone?: string;
   lastAddress: AddressProfile | null;
   updatedAt: number;
 }

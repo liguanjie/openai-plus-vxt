@@ -8,6 +8,8 @@ const DEFAULT_ADDRESS_AUTOFILL_SETTINGS: AddressAutofillSettings = {
   payPalSignupEnabled: true,
   countryCode: 'US',
   city: '',
+  fixedPassword: '',
+  fixedPhone: '',
   lastAddress: null,
   updatedAt: 0,
 };
@@ -93,6 +95,8 @@ export function normalizeAddressAutofillSettings(value: unknown): AddressAutofil
     payPalSignupEnabled,
     countryCode: normalizeCountryCode(source.countryCode || source.country),
     city: String(source.city || source.region || DEFAULT_ADDRESS_AUTOFILL_SETTINGS.city),
+    fixedPassword: String(source.fixedPassword !== undefined ? source.fixedPassword : DEFAULT_ADDRESS_AUTOFILL_SETTINGS.fixedPassword || ''),
+    fixedPhone: String(source.fixedPhone !== undefined ? source.fixedPhone : DEFAULT_ADDRESS_AUTOFILL_SETTINGS.fixedPhone || ''),
     lastAddress: normalizeAddress(source.lastAddress),
     updatedAt: Number(source.updatedAt || DEFAULT_ADDRESS_AUTOFILL_SETTINGS.updatedAt),
   };

@@ -173,14 +173,18 @@ async function fillPaypalSignupFields(address: AddressProfile, allowRetry: boole
     return { filled: 1, countryChanged: true };
   }
 
+  const settings = await loadAddressAutofillSettings();
   const email = await resolveEmail(address);
   const name = splitName(address.fullName);
   const expiry = parseExpiry(address.creditCard.expires);
 
+  const password = settings.fixedPassword?.trim() ? settings.fixedPassword.trim() : email;
+  const phone = settings.fixedPhone?.trim() ? settings.fixedPhone.trim() : address.phone;
+
   filled += fillText(PAYPAL_FIELDS.email, email, true);
-  filled += fillPasswordField(email);
-  renderPasswordEmailNote(email);
-  filled += fillText(PAYPAL_FIELDS.phone, address.phone, true);
+  filled += fillPasswordField(password);
+  renderPasswordEmailNote(password, email);
+  filled += fillText(PAYPAL_FIELDS.phone, phone, true);
   filled += fillText(PAYPAL_FIELDS.cardNumber, address.creditCard.number, true);
   filled += fillText(PAYPAL_FIELDS.expiry, expiry.short, true);
   filled += fillText(PAYPAL_FIELDS.csc, address.creditCard.cvv, true);
@@ -279,16 +283,17 @@ function fillPasswordField(value: string): number {
   return 1;
 }
 
-function renderPasswordEmailNote(email: string): void {
+function renderPasswordEmailNote(password: string, email: string): void {
   const anchor = findPasswordDisclaimerAnchor();
   if (!anchor) {
     return;
   }
 
-  fillPasswordField(email);
+  fillPasswordField(password);
 
   const noteId = 'opx-paypal-password-note';
-  const text = `当前密码和邮箱一致（${email}）`;
+  const isFixed = password !== email;
+  const text = isFixed ? `当前密码已填充为固定值 (${password})` : `当前密码和邮箱一致（${email}）`;
   let note = document.getElementById(noteId);
   if (!note) {
     note = document.createElement('div');
