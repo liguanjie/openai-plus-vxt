@@ -15,6 +15,7 @@ export interface SmsCodeRecord {
 export interface SmsRelayState {
   rawInput: string;
   history: SmsCodeRecord[];
+  isPollingActive: boolean;
   updatedAt: number;
 }
 

@@ -80,13 +80,21 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
       stopPolling();
       updateButtonState();
       setStatus(status, '已停止接收。输入内容已自动保存。', 'pending');
-      await persistInputNow();
+      currentState = await saveSmsRelayState({
+        isPollingActive: false,
+        rawInput: input.value,
+      });
+      lastSavedInput = input.value;
       renderTargetsFromInput();
     } else {
       isPollingActive = true;
       updateButtonState();
       setStatus(status, '已启动接收，正在获取验证码...', 'pending');
-      await persistInputNow();
+      currentState = await saveSmsRelayState({
+        isPollingActive: true,
+        rawInput: input.value,
+      });
+      lastSavedInput = input.value;
       renderTargetsFromInput();
       await pollAllTargets(true);
       ensurePolling();
@@ -109,6 +117,9 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
   const update = async () => {
     const state = await loadSmsRelayState();
     currentState = state;
+    if (state.isPollingActive !== undefined) {
+      isPollingActive = state.isPollingActive;
+    }
     if (!inputFocused && input.value !== state.rawInput) {
       input.value = state.rawInput;
       lastSavedInput = state.rawInput;

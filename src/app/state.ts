@@ -48,6 +48,7 @@ const DEFAULT_LINK_STATE: LinkExtractorState = {
 const DEFAULT_SMS_RELAY_STATE: SmsRelayState = {
   rawInput: '',
   history: [],
+  isPollingActive: true,
   updatedAt: 0,
 };
 
@@ -184,9 +185,13 @@ function normalizeSmsRelayState(value: unknown): SmsRelayState {
   const history = Array.isArray(source.history)
     ? source.history.map(normalizeSmsCodeRecord).filter((item): item is SmsCodeRecord => Boolean(item))
     : DEFAULT_SMS_RELAY_STATE.history;
+  const isPollingActive = source.isPollingActive === undefined
+    ? DEFAULT_SMS_RELAY_STATE.isPollingActive
+    : Boolean(source.isPollingActive);
   return {
     rawInput: String(source.rawInput || DEFAULT_SMS_RELAY_STATE.rawInput),
     history,
+    isPollingActive,
     updatedAt: Number(source.updatedAt || DEFAULT_SMS_RELAY_STATE.updatedAt),
   };
 }
