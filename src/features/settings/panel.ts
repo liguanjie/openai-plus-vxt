@@ -1,5 +1,6 @@
 import { checkLatestVersion } from '../version-check/github';
-import { loadAddressAutofillSettings, saveAddressAutofillSettings } from './state';
+import { loadAddressAutofillSettings, saveAddressAutofillSettings, normalizeAddressAutofillSettings } from './state';
+import { normalizeAppState } from '../../app/state';
 
 const TG_GROUP_URL = 'https://t.me/fuck_open';
 
@@ -56,6 +57,45 @@ export function createSettingsDialog(options: SettingsDialogOptions = {}): Setti
     '用于 paypal.com/checkoutweb/signup 页面，填写国家、邮箱、卡资料、姓名、地址和密码提示。',
   );
 
+  const backupItem = document.createElement('div');
+  backupItem.className = 'opx-setting-item';
+
+  const backupTitle = document.createElement('div');
+  backupTitle.textContent = '配置备份与迁移';
+  Object.assign(backupTitle.style, {
+    fontWeight: '700',
+    fontSize: '12px',
+    color: '#93e4bd',
+    marginBottom: '8px',
+  });
+
+  const backupButtons = document.createElement('div');
+  Object.assign(backupButtons.style, {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '8px',
+  });
+
+  const exportButton = document.createElement('button');
+  exportButton.className = 'opx-mini-button';
+  exportButton.type = 'button';
+  exportButton.textContent = '导出配置';
+  exportButton.title = '备份当前所有设置和临时邮箱配置为 JSON 文件';
+
+  const importButton = document.createElement('button');
+  importButton.className = 'opx-mini-button';
+  importButton.type = 'button';
+  importButton.textContent = '导入配置';
+  importButton.title = '从 JSON 备份文件恢复所有设置';
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
+  fileInput.style.display = 'none';
+
+  backupButtons.append(exportButton, importButton);
+  backupItem.append(backupTitle, backupButtons, fileInput);
+
   const checkUpdateButton = document.createElement('button');
   checkUpdateButton.className = 'opx-external-link-button';
   checkUpdateButton.type = 'button';
@@ -75,7 +115,7 @@ export function createSettingsDialog(options: SettingsDialogOptions = {}): Setti
   const status = document.createElement('div');
   status.className = 'opx-status';
 
-  dialog.append(header, payOpenAiItem, payPalSignupItem, checkUpdateButton, tgGroupButton, hint, status);
+  dialog.append(header, payOpenAiItem, payPalSignupItem, backupItem, checkUpdateButton, tgGroupButton, hint, status);
   overlay.append(dialog);
 
   closeButton.addEventListener('click', close);
@@ -114,6 +154,91 @@ export function createSettingsDialog(options: SettingsDialogOptions = {}): Setti
     } finally {
       checkUpdateButton.disabled = false;
     }
+  });
+
+  exportButton.addEventListener('click', async () => {
+    setStatus(status, '正在导出配置...', 'pending');
+    try {
+      const APP_STATE_KEY = 'opx.registerAssist.state';
+      const SETTINGS_KEY = 'opx.extension.settings';
+      const data = await browser.storage.local.get([APP_STATE_KEY, SETTINGS_KEY]);
+
+      const config = {
+        version: 1,
+        appState: data[APP_STATE_KEY] || null,
+        addressSettings: data[SETTINGS_KEY] || null,
+      };
+
+      const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `openai-plus-vxt-settings-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus(status, '配置导出成功', 'ok');
+    } catch (error) {
+      setStatus(status, `导出失败：${error instanceof Error ? error.message : String(error)}`, 'error');
+    }
+  });
+
+  importButton.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setStatus(status, '正在读取配置文件...', 'pending');
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result;
+        if (typeof text !== 'string') {
+          throw new Error('文件内容格式错误');
+        }
+        const parsed = JSON.parse(text);
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('无效的 JSON 配置');
+        }
+
+        const APP_STATE_KEY = 'opx.registerAssist.state';
+        const SETTINGS_KEY = 'opx.extension.settings';
+
+        const appState = parsed.appState ? normalizeAppState(parsed.appState) : null;
+        const addressSettings = parsed.addressSettings ? normalizeAddressAutofillSettings(parsed.addressSettings) : null;
+
+        if (!appState && !addressSettings) {
+          throw new Error('未找到有效的配置项目');
+        }
+
+        const keysToSet: Record<string, any> = {};
+        if (appState) {
+          keysToSet[APP_STATE_KEY] = appState;
+        }
+        if (addressSettings) {
+          keysToSet[SETTINGS_KEY] = addressSettings;
+        }
+
+        await browser.storage.local.set(keysToSet);
+        setStatus(status, '导入成功！正在重新加载页面...', 'ok');
+        setTimeout(() => {
+          location.reload();
+        }, 1200);
+      } catch (error) {
+        setStatus(status, `导入失败：${error instanceof Error ? error.message : String(error)}`, 'error');
+      } finally {
+        fileInput.value = '';
+      }
+    };
+    reader.onerror = () => {
+      setStatus(status, '读取文件失败', 'error');
+      fileInput.value = '';
+    };
+    reader.readAsText(file);
   });
 
   const update = async () => {

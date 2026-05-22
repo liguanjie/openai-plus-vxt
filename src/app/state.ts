@@ -130,7 +130,7 @@ export function isFeatureTab(value: string): value is FeatureTab {
   return value === 'register' || value === 'link' || value === 'address' || value === 'sms';
 }
 
-function normalizeAppState(value: unknown): AppState {
+export function normalizeAppState(value: unknown): AppState {
   const source = isRecord(value) ? value : {};
   const registerSource = isRecord(source.register) ? source.register : source;
   const linkSource = isRecord(source.linkExtractor) ? source.linkExtractor : source;
