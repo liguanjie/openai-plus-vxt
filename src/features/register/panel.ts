@@ -265,8 +265,9 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
     serviceSelect.value = saved.cfTempEmailService;
     generatorSelect.value = saved.cfTempEmailGenerator;
     
-    const activeEl = container.getRootNode() instanceof ShadowRoot
-      ? (container.getRootNode() as ShadowRoot).activeElement
+    const rootNode = container.getRootNode();
+    const activeEl = (rootNode && 'activeElement' in rootNode)
+      ? (rootNode as any).activeElement
       : document.activeElement;
 
     if (activeEl !== apiInput) {

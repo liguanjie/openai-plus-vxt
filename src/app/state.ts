@@ -29,7 +29,7 @@ const DEFAULT_REGISTER_STATE: RegisterState = {
   // Cloudflare Temp Email defaults
   cfTempEmailService: 'outlook',
   cfTempEmailGenerator: 'custom',
-  cfTempEmailApi: '',
+  cfTempEmailApi: 'https://temp-email-worker.ben856879.workers.dev',
   cfTempEmailAdminAuth: '',
   cfTempEmailCustomAuth: '',
   cfTempEmailLookupMode: 'receive-mailbox',
@@ -159,7 +159,7 @@ function normalizeRegisterState(value: unknown): RegisterState {
     // Normalize Cloudflare Temp Email fields
     cfTempEmailService: (source.cfTempEmailService === 'custom' || source.cfTempEmailService === 'cloudflare-temp') ? source.cfTempEmailService : 'outlook',
     cfTempEmailGenerator: (source.cfTempEmailGenerator === 'cloudflare-temp') ? source.cfTempEmailGenerator : 'custom',
-    cfTempEmailApi: String(source.cfTempEmailApi !== undefined ? source.cfTempEmailApi : DEFAULT_REGISTER_STATE.cfTempEmailApi),
+    cfTempEmailApi: String((source.cfTempEmailApi !== undefined && source.cfTempEmailApi !== '') ? source.cfTempEmailApi : DEFAULT_REGISTER_STATE.cfTempEmailApi),
     cfTempEmailAdminAuth: String(source.cfTempEmailAdminAuth !== undefined ? source.cfTempEmailAdminAuth : DEFAULT_REGISTER_STATE.cfTempEmailAdminAuth),
     cfTempEmailCustomAuth: String(source.cfTempEmailCustomAuth !== undefined ? source.cfTempEmailCustomAuth : DEFAULT_REGISTER_STATE.cfTempEmailCustomAuth),
     cfTempEmailLookupMode: (source.cfTempEmailLookupMode === 'registration-email') ? 'registration-email' : 'receive-mailbox',
