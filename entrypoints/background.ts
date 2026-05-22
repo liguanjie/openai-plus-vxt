@@ -122,6 +122,7 @@ async function fetchChatGptSessionInTab(): Promise<ChatGptSessionResponse> {
       planType: stringValue(account.planType) || stringValue(account.plan_type),
       accessToken: stringValue(data.accessToken),
       fetchedAt: Date.now(),
+      raw: data,
     };
   }
 

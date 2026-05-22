@@ -2,6 +2,7 @@ import { loadLinkExtractorState, saveLinkExtractorState } from '../../app/state'
 import type { FeaturePanelHandle } from '../../app/types';
 import { extractAccessToken, normalizeCheckoutOptions } from './checkout';
 import type { ChatGptSessionResponse, CheckoutLinkResponse, CheckoutOptions } from './types';
+import { exportCpaSessionJson, exportSub2SessionJson } from './exporter';
 
 const REGION_OPTIONS = [
   ['ID', '印尼 / IDR'],
@@ -21,7 +22,12 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
   const tokenValue = createSessionRow('Token', '未读取');
   sessionCard.append(emailValue.row, planValue.row, tokenValue.row);
 
-  const refreshSessionButton = createButton('读取 ChatGPT session', 'opx-button opx-button-secondary');
+  const sessionButtonRow = document.createElement('div');
+  sessionButtonRow.className = 'opx-button-row';
+  const refreshSessionButton = createButton('读取 session', 'opx-button opx-button-secondary');
+  const exportCpaButton = createButton('导出 CPA', 'opx-button opx-button-secondary');
+  const exportSub2Button = createButton('导出 SUB2', 'opx-button opx-button-secondary');
+  sessionButtonRow.append(refreshSessionButton, exportCpaButton, exportSub2Button);
 
   const planSelect = createSelect([
     ['chatgptplusplan', 'ChatGPT Plus'],
@@ -91,6 +97,7 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
   let sessionAccessToken = '';
   let sessionFetchInFlight = false;
   let sessionFetchedOnce = false;
+  let currentSessionObject: Record<string, any> | null = null;
 
   const update = async () => {
     const saved = await loadLinkExtractorState();
@@ -117,8 +124,37 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
     item.addEventListener('input', () => void syncLinkOptions());
   }
 
+  const handleExport = async (format: 'cpa' | 'sub2') => {
+    if (!currentSessionObject) {
+      await refreshSession();
+    }
+    if (!currentSessionObject) {
+      setStatus(linkStatus, '未读取到 ChatGPT session，请先确保已登录 ChatGPT 并点击“读取 session”重试。', 'error');
+      return;
+    }
+    try {
+      if (format === 'cpa') {
+        const result = exportCpaSessionJson(currentSessionObject);
+        downloadTextFile(result.fileContent, result.fileName);
+        if (result.hasRefreshToken) {
+          setStatus(linkStatus, 'CPA JSON 导出成功', 'ok');
+        } else {
+          setStatus(linkStatus, '导出成功（注：当前 session 不含 refresh_token，导出文件无法自动续期）', 'ok');
+        }
+      } else {
+        const result = exportSub2SessionJson(currentSessionObject);
+        downloadTextFile(result.fileContent, result.fileName);
+        setStatus(linkStatus, 'SUB2 JSON 导出成功', 'ok');
+      }
+    } catch (error) {
+      setStatus(linkStatus, `导出失败：${errorMessage(error)}`, 'error');
+    }
+  };
+
   refreshSessionButton.addEventListener('click', () => void refreshSession());
   refreshButton.addEventListener('click', () => void refreshSession());
+  exportCpaButton.addEventListener('click', () => void handleExport('cpa'));
+  exportSub2Button.addEventListener('click', () => void handleExport('sub2'));
 
   tokenInput.addEventListener('paste', () => window.setTimeout(() => normalizeTokenInput(false), 0));
   tokenInput.addEventListener('input', () => {
@@ -185,6 +221,7 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
   clearLinkButton.addEventListener('click', () => {
     tokenInput.value = '';
     sessionAccessToken = '';
+    currentSessionObject = null;
     tokenHint.textContent = '切到提链接 tab 会读取 /api/auth/session；token 只在当前页面内使用。';
     tokenHint.classList.remove('is-ok');
     setGeneratedLink('');
@@ -196,7 +233,7 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
   container.append(
     linkSummary,
     sessionCard,
-    refreshSessionButton,
+    sessionButtonRow,
     mainGrid,
     teamOptions,
     tokenInput,
@@ -217,6 +254,8 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
     sessionFetchInFlight = true;
     refreshSessionButton.disabled = true;
     refreshButton.disabled = true;
+    exportCpaButton.disabled = true;
+    exportSub2Button.disabled = true;
     setStatus(linkStatus, '正在读取 https://chatgpt.com/api/auth/session ...', 'pending');
     try {
       const response: ChatGptSessionResponse = await browser.runtime.sendMessage({
@@ -229,6 +268,7 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
       }
 
       const session = response.session;
+      currentSessionObject = session?.raw || (session ? { accessToken: session.accessToken, email: session.email, planType: session.planType } : null);
       setSessionRows(session?.email || '', session?.planType || '', session?.accessToken || '');
       if (session?.accessToken) {
         sessionAccessToken = session.accessToken;
@@ -242,8 +282,22 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
     } finally {
       refreshSessionButton.disabled = false;
       refreshButton.disabled = false;
+      exportCpaButton.disabled = false;
+      exportSub2Button.disabled = false;
       sessionFetchInFlight = false;
     }
+  }
+
+  function downloadTextFile(content: string, fileName: string, mimeType = 'application/json;charset=utf-8'): void {
+    const blob = new Blob([content], { type: mimeType });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
   }
 
   function setCheckoutOptions(optionsInput: unknown): void {
