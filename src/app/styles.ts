@@ -17,7 +17,7 @@ export const PANEL_STYLES = `
 
 .opx-panel {
   box-sizing: border-box;
-  width: min(380px, calc(100vw - 42px));
+  width: min(480px, calc(100vw - 42px));
   max-height: calc(100vh - 88px);
   margin-right: 18px;
   padding: 10px;
