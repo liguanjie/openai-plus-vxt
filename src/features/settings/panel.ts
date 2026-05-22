@@ -1,5 +1,5 @@
 import { checkLatestVersion } from '../version-check/github';
-import { loadAddressAutofillSettings, saveAddressAutofillSettings, normalizeAddressAutofillSettings } from './state';
+import { loadAddressAutofillSettings, saveAddressAutofillSettings, normalizeExtensionSettings } from './state';
 import { normalizeAppState } from '../../app/state';
 
 const TG_GROUP_URL = 'https://t.me/fuck_open';
@@ -209,7 +209,7 @@ export function createSettingsDialog(options: SettingsDialogOptions = {}): Setti
         const SETTINGS_KEY = 'opx.extension.settings';
 
         const appState = parsed.appState ? normalizeAppState(parsed.appState) : null;
-        const addressSettings = parsed.addressSettings ? normalizeAddressAutofillSettings(parsed.addressSettings) : null;
+        const addressSettings = parsed.addressSettings ? normalizeExtensionSettings(parsed.addressSettings) : null;
 
         if (!appState && !addressSettings) {
           throw new Error('未找到有效的配置项目');

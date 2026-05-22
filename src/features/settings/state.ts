@@ -74,8 +74,26 @@ export async function loadAddressAutofillSettings(): Promise<AddressAutofillSett
 
 export function normalizeExtensionSettings(value: unknown): ExtensionSettings {
   const source = isRecord(value) ? value : {};
+  
+  // If it's a nested structure, use it.
+  if (source.addressAutofill && typeof source.addressAutofill === 'object') {
+    return {
+      addressAutofill: normalizeAddressAutofillSettings(source.addressAutofill),
+      updatedAt: Number(source.updatedAt || DEFAULT_SETTINGS.updatedAt),
+    };
+  }
+  
+  // If it's a flat structure (older format or direct AddressAutofillSettings),
+  // we check if it has any address autofill settings directly at root.
+  if ('payOpenAiEnabled' in source || 'payPalSignupEnabled' in source || 'countryCode' in source || 'fixedPassword' in source || 'fixedPhone' in source) {
+    return {
+      addressAutofill: normalizeAddressAutofillSettings(source),
+      updatedAt: Number(source.updatedAt || DEFAULT_SETTINGS.updatedAt),
+    };
+  }
+
   return {
-    addressAutofill: normalizeAddressAutofillSettings(source.addressAutofill),
+    addressAutofill: normalizeAddressAutofillSettings(undefined),
     updatedAt: Number(source.updatedAt || DEFAULT_SETTINGS.updatedAt),
   };
 }
