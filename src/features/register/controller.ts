@@ -92,6 +92,85 @@ export function createRegisterController(): RegisterController {
       await waitForPageReady();
       await fillAboutYouAndCreate();
     },
+    syncTempEmailDomains: async () => {
+      const state = await loadRegisterState();
+      const response = await browser.runtime.sendMessage({
+        type: 'opx:fetch-temp-email-domains',
+        api: state.cfTempEmailApi,
+        adminAuth: state.cfTempEmailAdminAuth,
+        customAuth: state.cfTempEmailCustomAuth,
+      });
+      if (response?.ok && Array.isArray(response.domains)) {
+        const nextDomain = response.domains.includes(state.cfTempEmailSelectedDomain)
+          ? state.cfTempEmailSelectedDomain
+          : (response.domains[0] || '');
+        await saveRegisterState({
+          cfTempEmailDomains: response.domains,
+          cfTempEmailSelectedDomain: nextDomain,
+        });
+        return { ok: true, message: `同步成功，获取到 ${response.domains.length} 个域名` };
+      }
+      return { ok: false, message: response?.message || '同步域名失败' };
+    },
+    generateTempEmailAddress: async () => {
+      const state = await loadRegisterState();
+      if (!state.cfTempEmailApi) {
+        return fail('请先配置 Cloudflare Temp Email API 地址');
+      }
+      if (!state.cfTempEmailSelectedDomain) {
+        return fail('请先选择或同步 Cloudflare Temp Email 域名');
+      }
+      const response = await browser.runtime.sendMessage({
+        type: 'opx:generate-temp-email',
+        api: state.cfTempEmailApi,
+        adminAuth: state.cfTempEmailAdminAuth,
+        customAuth: state.cfTempEmailCustomAuth,
+        domain: state.cfTempEmailSelectedDomain,
+        useRandomSubdomain: state.cfTempEmailUseRandomSubdomain,
+        customSubdomain: state.cfTempEmailCustomSubdomain,
+      });
+      if (response?.ok && response.email) {
+        await saveRegisterState({
+          rawInput: response.email,
+          email: response.email,
+          accountLine: '',
+          inputMode: 'email',
+          autoOtp: false,
+        });
+        return { ok: true, message: `生成成功: ${response.email}` };
+      }
+      return { ok: false, message: response?.message || '生成临时邮箱失败' };
+    },
+    waitForTempEmailOtp: async () => {
+      if (!isEmailVerificationPage()) {
+        return fail('当前页面不是邮箱验证码页');
+      }
+      const state = await loadRegisterState();
+      if (!state.email) {
+        return fail('当前没有配置或生成临时邮箱');
+      }
+      const response = await browser.runtime.sendMessage({
+        type: 'opx:wait-temp-email-otp',
+        api: state.cfTempEmailApi,
+        adminAuth: state.cfTempEmailAdminAuth,
+        customAuth: state.cfTempEmailCustomAuth,
+        lookupMode: state.cfTempEmailLookupMode,
+        receiveMailbox: state.cfTempEmailReceiveMailbox,
+        targetEmail: state.email,
+        since: state.otpRequestedAt || state.updatedAt || Date.now(),
+        timeoutMs: 180_000,
+        intervalMs: 5_000,
+      });
+      if (response?.ok && response.code) {
+        const fillResult = await fillOtpAndContinue(response.code);
+        return {
+          ...fillResult,
+          code: response.code,
+          message: fillResult.ok ? `已收到并提交验证码：${response.code}` : fillResult.message,
+        };
+      }
+      return { ok: false, message: response?.message || '等待验证码失败或超时' };
+    },
   };
 }
 

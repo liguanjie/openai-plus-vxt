@@ -3,7 +3,18 @@ import type { RandomAddressMessage } from '../src/features/address-autofill/type
 import { createCheckoutLink } from '../src/features/link-extractor/checkout';
 import { fetchChatGptSession } from '../src/features/link-extractor/session';
 import type { ChatGptSessionMessage, ChatGptSessionResponse, CheckoutLinkMessage } from '../src/features/link-extractor/types';
-import type { OutlookOtpMessage, OutlookOtpResponse } from '../src/features/register/types';
+import type {
+  OutlookOtpMessage,
+  OutlookOtpResponse,
+  FetchTempEmailDomainsMessage,
+  GenerateTempEmailMessage,
+  WaitTempEmailOtpMessage,
+} from '../src/features/register/types';
+import {
+  fetchCloudflareTempEmailAvailableDomains,
+  fetchCloudflareTempEmailAddress,
+  pollCloudflareTempEmailVerificationCode,
+} from '../src/features/register/temp-email';
 import type { SmsRelayFetchMessage, SmsRelayFetchResponse } from '../src/features/sms/types';
 
 type MessageSenderLike = {
@@ -28,23 +39,52 @@ export default defineBackground(() => {
   installAssistantInjector();
 
   browser.runtime.onMessage.addListener((message: unknown, sender) => {
-    if (!isOutlookOtpMessage(message)) {
-      if (isCheckoutLinkMessage(message)) {
-        return createCheckoutLink(message.raw, message.options);
-      }
-      if (isChatGptSessionMessage(message)) {
-        return fetchChatGptSessionForSender(sender);
-      }
-      if (isRandomAddressMessage(message)) {
-        return fetchRandomAddress(message.countryCode, message.city);
-      }
-      if (isSmsRelayFetchMessage(message)) {
-        return fetchSmsRelay(message.url);
-      }
-      return undefined;
+    if (isOutlookOtpMessage(message)) {
+      return waitForOutlookOtp(message);
     }
-
-    return waitForOutlookOtp(message);
+    if (isCheckoutLinkMessage(message)) {
+      return createCheckoutLink(message.raw, message.options);
+    }
+    if (isChatGptSessionMessage(message)) {
+      return fetchChatGptSessionForSender(sender);
+    }
+    if (isRandomAddressMessage(message)) {
+      return fetchRandomAddress(message.countryCode, message.city);
+    }
+    if (isSmsRelayFetchMessage(message)) {
+      return fetchSmsRelay(message.url);
+    }
+    if (isFetchTempEmailDomainsMessage(message)) {
+      return fetchCloudflareTempEmailAvailableDomains(message.api, message.adminAuth, message.customAuth)
+        .then((domains) => ({ ok: true, domains }))
+        .catch((error) => ({ ok: false, message: error.message }));
+    }
+    if (isGenerateTempEmailMessage(message)) {
+      return fetchCloudflareTempEmailAddress({
+        api: message.api,
+        adminAuth: message.adminAuth,
+        customAuth: message.customAuth,
+        domain: message.domain,
+        useRandomSubdomain: message.useRandomSubdomain,
+        customSubdomain: message.customSubdomain,
+      })
+        .then((email) => ({ ok: true, email }))
+        .catch((error) => ({ ok: false, message: error.message }));
+    }
+    if (isWaitTempEmailOtpMessage(message)) {
+      return pollCloudflareTempEmailVerificationCode({
+        api: message.api,
+        adminAuth: message.adminAuth,
+        customAuth: message.customAuth,
+        lookupMode: message.lookupMode,
+        receiveMailbox: message.receiveMailbox,
+        targetEmail: message.targetEmail,
+        since: message.since,
+        timeoutMs: message.timeoutMs,
+        intervalMs: message.intervalMs,
+      });
+    }
+    return undefined;
   });
 });
 
@@ -325,6 +365,35 @@ function isSmsRelayFetchMessage(message: unknown): message is SmsRelayFetchMessa
       typeof message === 'object' &&
       (message as SmsRelayFetchMessage).type === 'opx:fetch-sms-relay' &&
       typeof (message as SmsRelayFetchMessage).url === 'string',
+  );
+}
+
+function isFetchTempEmailDomainsMessage(message: unknown): message is FetchTempEmailDomainsMessage {
+  return Boolean(
+    message &&
+      typeof message === 'object' &&
+      (message as FetchTempEmailDomainsMessage).type === 'opx:fetch-temp-email-domains' &&
+      typeof (message as FetchTempEmailDomainsMessage).api === 'string',
+  );
+}
+
+function isGenerateTempEmailMessage(message: unknown): message is GenerateTempEmailMessage {
+  return Boolean(
+    message &&
+      typeof message === 'object' &&
+      (message as GenerateTempEmailMessage).type === 'opx:generate-temp-email' &&
+      typeof (message as GenerateTempEmailMessage).api === 'string' &&
+      typeof (message as GenerateTempEmailMessage).domain === 'string',
+  );
+}
+
+function isWaitTempEmailOtpMessage(message: unknown): message is WaitTempEmailOtpMessage {
+  return Boolean(
+    message &&
+      typeof message === 'object' &&
+      (message as WaitTempEmailOtpMessage).type === 'opx:wait-temp-email-otp' &&
+      typeof (message as WaitTempEmailOtpMessage).api === 'string' &&
+      typeof (message as WaitTempEmailOtpMessage).targetEmail === 'string',
   );
 }
 

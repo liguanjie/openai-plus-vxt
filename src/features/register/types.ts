@@ -19,6 +19,9 @@ export interface RegisterController {
   waitForOutlookOtp(): Promise<ActionResult>;
   fillProfileAndCreate(): Promise<ActionResult>;
   autoRunForCurrentPage(): Promise<void>;
+  syncTempEmailDomains(): Promise<ActionResult>;
+  generateTempEmailAddress(): Promise<ActionResult>;
+  waitForTempEmailOtp(): Promise<ActionResult>;
 }
 
 export interface RegisterState {
@@ -30,6 +33,19 @@ export interface RegisterState {
   apiBase: string;
   otpRequestedAt: number;
   updatedAt: number;
+
+  // Cloudflare Temp Email fields
+  cfTempEmailService: 'custom' | 'outlook' | 'cloudflare-temp';
+  cfTempEmailGenerator: 'custom' | 'cloudflare-temp';
+  cfTempEmailApi: string;
+  cfTempEmailAdminAuth: string;
+  cfTempEmailCustomAuth: string;
+  cfTempEmailLookupMode: 'receive-mailbox' | 'registration-email';
+  cfTempEmailReceiveMailbox: string;
+  cfTempEmailUseRandomSubdomain: boolean;
+  cfTempEmailCustomSubdomain: string;
+  cfTempEmailDomains: string[];
+  cfTempEmailSelectedDomain: string;
 }
 
 export type AccountInputMode = 'empty' | 'email' | 'outlook-line' | 'invalid';
@@ -56,3 +72,34 @@ export interface OutlookOtpResponse {
   message: string;
   code?: string;
 }
+
+export interface FetchTempEmailDomainsMessage {
+  type: 'opx:fetch-temp-email-domains';
+  api: string;
+  adminAuth: string;
+  customAuth: string;
+}
+
+export interface GenerateTempEmailMessage {
+  type: 'opx:generate-temp-email';
+  api: string;
+  adminAuth: string;
+  customAuth: string;
+  domain: string;
+  useRandomSubdomain: boolean;
+  customSubdomain: string;
+}
+
+export interface WaitTempEmailOtpMessage {
+  type: 'opx:wait-temp-email-otp';
+  api: string;
+  adminAuth: string;
+  customAuth: string;
+  lookupMode: 'receive-mailbox' | 'registration-email';
+  receiveMailbox: string;
+  targetEmail: string;
+  since: number;
+  timeoutMs?: number;
+  intervalMs?: number;
+}
+

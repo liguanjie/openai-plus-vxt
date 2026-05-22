@@ -25,6 +25,19 @@ const DEFAULT_REGISTER_STATE: RegisterState = {
   apiBase: DEFAULT_API_BASE,
   otpRequestedAt: 0,
   updatedAt: 0,
+
+  // Cloudflare Temp Email defaults
+  cfTempEmailService: 'outlook',
+  cfTempEmailGenerator: 'custom',
+  cfTempEmailApi: '',
+  cfTempEmailAdminAuth: '',
+  cfTempEmailCustomAuth: '',
+  cfTempEmailLookupMode: 'receive-mailbox',
+  cfTempEmailReceiveMailbox: '',
+  cfTempEmailUseRandomSubdomain: false,
+  cfTempEmailCustomSubdomain: 'edu',
+  cfTempEmailDomains: [],
+  cfTempEmailSelectedDomain: '',
 };
 
 const DEFAULT_LINK_STATE: LinkExtractorState = {
@@ -142,6 +155,19 @@ function normalizeRegisterState(value: unknown): RegisterState {
     apiBase: String(source.apiBase || DEFAULT_REGISTER_STATE.apiBase),
     otpRequestedAt: Number(source.otpRequestedAt || DEFAULT_REGISTER_STATE.otpRequestedAt),
     updatedAt: Number(source.updatedAt || DEFAULT_REGISTER_STATE.updatedAt),
+
+    // Normalize Cloudflare Temp Email fields
+    cfTempEmailService: (source.cfTempEmailService === 'custom' || source.cfTempEmailService === 'cloudflare-temp') ? source.cfTempEmailService : 'outlook',
+    cfTempEmailGenerator: (source.cfTempEmailGenerator === 'cloudflare-temp') ? source.cfTempEmailGenerator : 'custom',
+    cfTempEmailApi: String(source.cfTempEmailApi !== undefined ? source.cfTempEmailApi : DEFAULT_REGISTER_STATE.cfTempEmailApi),
+    cfTempEmailAdminAuth: String(source.cfTempEmailAdminAuth !== undefined ? source.cfTempEmailAdminAuth : DEFAULT_REGISTER_STATE.cfTempEmailAdminAuth),
+    cfTempEmailCustomAuth: String(source.cfTempEmailCustomAuth !== undefined ? source.cfTempEmailCustomAuth : DEFAULT_REGISTER_STATE.cfTempEmailCustomAuth),
+    cfTempEmailLookupMode: (source.cfTempEmailLookupMode === 'registration-email') ? 'registration-email' : 'receive-mailbox',
+    cfTempEmailReceiveMailbox: String(source.cfTempEmailReceiveMailbox !== undefined ? source.cfTempEmailReceiveMailbox : DEFAULT_REGISTER_STATE.cfTempEmailReceiveMailbox),
+    cfTempEmailUseRandomSubdomain: Boolean(source.cfTempEmailUseRandomSubdomain),
+    cfTempEmailCustomSubdomain: String(source.cfTempEmailCustomSubdomain !== undefined ? source.cfTempEmailCustomSubdomain : DEFAULT_REGISTER_STATE.cfTempEmailCustomSubdomain),
+    cfTempEmailDomains: Array.isArray(source.cfTempEmailDomains) ? source.cfTempEmailDomains.map(String) : DEFAULT_REGISTER_STATE.cfTempEmailDomains,
+    cfTempEmailSelectedDomain: String(source.cfTempEmailSelectedDomain !== undefined ? source.cfTempEmailSelectedDomain : DEFAULT_REGISTER_STATE.cfTempEmailSelectedDomain),
   };
 }
 
