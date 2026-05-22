@@ -265,9 +265,19 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
     serviceSelect.value = saved.cfTempEmailService;
     generatorSelect.value = saved.cfTempEmailGenerator;
     
-    apiInput.value = saved.cfTempEmailApi;
-    adminAuthInput.value = saved.cfTempEmailAdminAuth;
-    customAuthInput.value = saved.cfTempEmailCustomAuth;
+    const activeEl = container.getRootNode() instanceof ShadowRoot
+      ? (container.getRootNode() as ShadowRoot).activeElement
+      : document.activeElement;
+
+    if (activeEl !== apiInput) {
+      apiInput.value = saved.cfTempEmailApi;
+    }
+    if (activeEl !== adminAuthInput) {
+      adminAuthInput.value = saved.cfTempEmailAdminAuth;
+    }
+    if (activeEl !== customAuthInput) {
+      customAuthInput.value = saved.cfTempEmailCustomAuth;
+    }
     
     if (saved.cfTempEmailLookupMode === 'registration-email') {
       lookupModeReceiveBtn.className = 'opx-mini-button opx-mini-button-secondary';
@@ -279,9 +289,13 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
       receiveMailboxField.style.display = 'none';
     }
     
-    receiveMailboxInput.value = saved.cfTempEmailReceiveMailbox;
+    if (activeEl !== receiveMailboxInput) {
+      receiveMailboxInput.value = saved.cfTempEmailReceiveMailbox;
+    }
     randomSubdomainCheckbox.checked = saved.cfTempEmailUseRandomSubdomain;
-    customSubdomainInput.value = saved.cfTempEmailCustomSubdomain;
+    if (activeEl !== customSubdomainInput) {
+      customSubdomainInput.value = saved.cfTempEmailCustomSubdomain;
+    }
     
     if (saved.cfTempEmailUseRandomSubdomain) {
       customSubdomainField.style.display = 'none';
@@ -357,15 +371,15 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
     await update();
   });
 
-  apiInput.addEventListener('change', async () => {
+  apiInput.addEventListener('input', async () => {
     await saveRegisterState({ cfTempEmailApi: apiInput.value.trim() });
   });
 
-  adminAuthInput.addEventListener('change', async () => {
+  adminAuthInput.addEventListener('input', async () => {
     await saveRegisterState({ cfTempEmailAdminAuth: adminAuthInput.value.trim() });
   });
 
-  customAuthInput.addEventListener('change', async () => {
+  customAuthInput.addEventListener('input', async () => {
     await saveRegisterState({ cfTempEmailCustomAuth: customAuthInput.value.trim() });
   });
 
@@ -379,7 +393,7 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
     await update();
   });
 
-  receiveMailboxInput.addEventListener('change', async () => {
+  receiveMailboxInput.addEventListener('input', async () => {
     await saveRegisterState({ cfTempEmailReceiveMailbox: receiveMailboxInput.value.trim() });
   });
 
@@ -388,7 +402,7 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
     await update();
   });
 
-  customSubdomainInput.addEventListener('change', async () => {
+  customSubdomainInput.addEventListener('input', async () => {
     await saveRegisterState({ cfTempEmailCustomSubdomain: customSubdomainInput.value.trim() });
   });
 
