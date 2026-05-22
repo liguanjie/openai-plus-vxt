@@ -140,10 +140,23 @@ export function createAddressPanel(container: HTMLElement): FeaturePanelHandle {
   }
 
   function renderSettings(settings: AddressAutofillSettings): void {
-    countrySelect.value = settings.countryCode;
-    cityInput.value = settings.city;
-    fixedPasswordInput.value = settings.fixedPassword || '';
-    fixedPhoneInput.value = settings.fixedPhone || '';
+    const rootNode = container.getRootNode();
+    const activeEl = (rootNode && 'activeElement' in rootNode)
+      ? (rootNode as any).activeElement
+      : document.activeElement;
+
+    if (activeEl !== countrySelect) {
+      countrySelect.value = settings.countryCode;
+    }
+    if (activeEl !== cityInput) {
+      cityInput.value = settings.city;
+    }
+    if (activeEl !== fixedPasswordInput) {
+      fixedPasswordInput.value = settings.fixedPassword || '';
+    }
+    if (activeEl !== fixedPhoneInput) {
+      fixedPhoneInput.value = settings.fixedPhone || '';
+    }
     renderSummary(settings);
     renderAddress(settings.lastAddress);
   }

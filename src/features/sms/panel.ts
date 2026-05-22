@@ -49,6 +49,7 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
   let lastSavedInput = '';
   let inputSaveTimer: number | null = null;
   let inputFocused = false;
+  let isPollingActive = true;
 
   container.append(
     summary,
@@ -74,15 +75,27 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
   });
 
   saveButton.addEventListener('click', async () => {
-    await persistInputNow();
-    renderTargetsFromInput();
-    await pollAllTargets();
+    if (isPollingActive) {
+      isPollingActive = false;
+      stopPolling();
+      updateButtonState();
+      setStatus(status, '已停止接收。输入内容已自动保存。', 'pending');
+      renderTargetsFromInput();
+    } else {
+      isPollingActive = true;
+      updateButtonState();
+      setStatus(status, '已启动接收，正在获取验证码...', 'pending');
+      await persistInputNow();
+      renderTargetsFromInput();
+      await pollAllTargets(true);
+      ensurePolling();
+    }
   });
 
   pollNowButton.addEventListener('click', async () => {
     await persistInputNow();
     renderTargetsFromInput();
-    await pollAllTargets();
+    await pollAllTargets(true);
   });
 
   clearHistoryButton.addEventListener('click', async () => {
@@ -102,11 +115,14 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
     }
     renderHistory(state.history);
     renderSummary();
+    updateButtonState();
   };
 
   const onShow = async () => {
     await update();
-    ensurePolling();
+    if (isPollingActive) {
+      ensurePolling();
+    }
   };
 
   void update();
@@ -134,10 +150,30 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
   }
 
   function ensurePolling(): void {
+    if (!isPollingActive) {
+      return;
+    }
     if (pollTimer !== null) {
       return;
     }
     pollTimer = window.setInterval(() => void pollAllTargets(), POLL_INTERVAL_MS);
+  }
+
+  function stopPolling(): void {
+    if (pollTimer !== null) {
+      window.clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  function updateButtonState(): void {
+    if (isPollingActive) {
+      saveButton.textContent = '停止接收';
+      saveButton.className = 'opx-button opx-button-danger';
+    } else {
+      saveButton.textContent = '开始接收';
+      saveButton.className = 'opx-button';
+    }
   }
 
   function renderTargetsFromInput(): void {
@@ -181,7 +217,11 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
     if (parsed.errors.length) {
       setStatus(status, parsed.errors.join('；'), 'error');
     } else if (parsed.targets.length) {
-      setStatus(status, `已加载 ${parsed.targets.length} 个接码链接，每 3 秒自动获取。`, 'pending');
+      if (isPollingActive) {
+        setStatus(status, `已加载 ${parsed.targets.length} 个接码链接，每 3 秒自动获取。`, 'pending');
+      } else {
+        setStatus(status, `已加载 ${parsed.targets.length} 个接码链接，自动获取已停止。`, 'pending');
+      }
     } else {
       setStatus(status, '输入内容会自动保存。', 'pending');
     }
@@ -195,7 +235,10 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
     summary.textContent = `${parsed.targets.length} 个接码链接 · ${foundCount} 个当前验证码 · ${historyCount} 条历史`;
   }
 
-  async function pollAllTargets(): Promise<void> {
+  async function pollAllTargets(force = false): Promise<void> {
+    if (!isPollingActive && !force) {
+      return;
+    }
     const parsed = parseSmsRelayTargets(input.value);
     if (!parsed.targets.length || parsed.errors.length) {
       return;

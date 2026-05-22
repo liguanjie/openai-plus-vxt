@@ -411,6 +411,24 @@ export const PANEL_STYLES = `
   transform: translateY(0);
 }
 
+.opx-button-danger {
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+  color: #ffffff;
+  border: 0;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.opx-button-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fca5a5 0%, #b91c1c 100%);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+  transform: translateY(-1px);
+}
+
+.opx-button-danger:active:not(:disabled) {
+  transform: translateY(0);
+}
+
 .opx-button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
