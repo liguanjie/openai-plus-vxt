@@ -6,11 +6,8 @@ const CONTENT_LOADED_KEY = '__opx_assistant_content_loaded__';
 
 export default defineContentScript({
   matches: [
-    'https://chatgpt.com/*',
-    'https://auth.openai.com/*',
-    'https://pay.openai.com/*',
-    'https://www.paypal.com/*',
-    'https://paypal.com/*',
+    'http://*/*',
+    'https://*/*',
   ],
   runAt: 'document_idle',
   registration: 'manifest',

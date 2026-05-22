@@ -24,6 +24,21 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
   const autoOtpButton = createButton('自动接收并填入验证码', 'opx-button opx-button-secondary');
   const profileButton = createButton('填写资料并创建');
 
+  const guideBox = document.createElement('div');
+  guideBox.className = 'opx-guide-box';
+
+  const guideTitle = document.createElement('div');
+  guideTitle.className = 'opx-guide-title';
+  guideTitle.textContent = '💡 流程快捷导航';
+
+  const guideLinks = document.createElement('div');
+  guideLinks.className = 'opx-guide-links';
+
+  const chatgptLink = createGuideLink('➡️ 登录/注册', 'https://chatgpt.com/auth/login');
+
+  guideLinks.append(chatgptLink);
+  guideBox.append(guideTitle, guideLinks);
+
   const status = document.createElement('div');
   status.className = 'opx-status';
   status.textContent = '等待操作';
@@ -34,6 +49,18 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
     if (accountInput.value !== saved.rawInput) {
       accountInput.value = saved.rawInput;
     }
+    // Highlight the active navigation link based on current URL
+    const isChatGpt = location.hostname === 'chatgpt.com';
+    chatgptLink.classList.toggle('is-active', isChatGpt);
+
+    // Toggle displays to keep UI clean and guide the user
+    emailButton.style.display = page.canFillEmail ? 'block' : 'none';
+    otp.style.display = page.canFillOtp ? 'block' : 'none';
+    otpButton.style.display = page.canFillOtp ? 'block' : 'none';
+    autoOtpButton.style.display = (page.canFillOtp && saved.autoOtp) ? 'block' : 'none';
+    profileButton.style.display = page.canFillProfile ? 'block' : 'none';
+    guideBox.style.display = 'block';
+
     emailButton.disabled = !page.canFillEmail;
     otpButton.disabled = !page.canFillOtp;
     autoOtpButton.disabled = !page.canFillOtp || !saved.autoOtp;
@@ -75,9 +102,17 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
     await update();
   });
 
-  container.append(accountInput, inputHint, emailButton, otp, otpButton, autoOtpButton, profileButton, status);
+  container.append(guideBox, accountInput, inputHint, emailButton, otp, otpButton, autoOtpButton, profileButton, status);
   void update();
   return { update };
+}
+
+function createGuideLink(label: string, url: string): HTMLAnchorElement {
+  const a = document.createElement('a');
+  a.className = 'opx-guide-link';
+  a.href = url;
+  a.textContent = label;
+  return a;
 }
 
 function createButton(label: string, className = 'opx-button'): HTMLButtonElement {

@@ -28,8 +28,8 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
     ['chatgptteamplan', 'ChatGPT Team'],
   ]);
   const uiModeSelect = createSelect([
-    ['custom', '短链接 / custom'],
     ['hosted', '长链接 / hosted'],
+    ['custom', '短链接 / custom'],
   ]);
   const regionSelect = createSelect(REGION_OPTIONS);
   const workspaceInput = createInput('Workspace 名称', 'text');
@@ -64,7 +64,12 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
   tokenHint.className = 'opx-hint';
   tokenHint.textContent = '切到提链接 tab 会读取 /api/auth/session；token 只在当前页面内使用。';
 
+  const refreshButton = createButton('刷新', 'opx-button opx-button-secondary');
   const generateLinkButton = createButton('生成订阅链接');
+  const actionGrid = document.createElement('div');
+  actionGrid.className = 'opx-grid-1-3';
+  actionGrid.append(refreshButton, generateLinkButton);
+
   const linkOutput = document.createElement('textarea');
   linkOutput.className = 'opx-textarea opx-output';
   linkOutput.placeholder = '生成后的订阅链接';
@@ -113,6 +118,7 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
   }
 
   refreshSessionButton.addEventListener('click', () => void refreshSession());
+  refreshButton.addEventListener('click', () => void refreshSession());
 
   tokenInput.addEventListener('paste', () => window.setTimeout(() => normalizeTokenInput(false), 0));
   tokenInput.addEventListener('input', () => {
@@ -195,7 +201,7 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
     teamOptions,
     tokenInput,
     tokenHint,
-    generateLinkButton,
+    actionGrid,
     createField('订阅链接', linkOutput),
     linkButtonRow,
     linkStatus,
@@ -210,6 +216,7 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
     }
     sessionFetchInFlight = true;
     refreshSessionButton.disabled = true;
+    refreshButton.disabled = true;
     setStatus(linkStatus, '正在读取 https://chatgpt.com/api/auth/session ...', 'pending');
     try {
       const response: ChatGptSessionResponse = await browser.runtime.sendMessage({
@@ -234,6 +241,7 @@ export function createLinkExtractorPanel(container: HTMLElement): FeaturePanelHa
       setStatus(linkStatus, `读取 session 失败：${String(error)}`, 'error');
     } finally {
       refreshSessionButton.disabled = false;
+      refreshButton.disabled = false;
       sessionFetchInFlight = false;
     }
   }

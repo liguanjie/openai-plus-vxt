@@ -21,7 +21,7 @@ const REGION_BILLING: Record<CheckoutRegion, { country: string; currency: string
 
 export const DEFAULT_CHECKOUT_OPTIONS: CheckoutOptions = {
   planName: 'chatgptplusplan',
-  uiMode: 'custom',
+  uiMode: 'hosted',
   region: 'US',
   workspaceName: 'MyTeam',
   seatQuantity: 5,

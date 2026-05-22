@@ -17,7 +17,7 @@ export const PANEL_STYLES = `
 
 .opx-panel {
   box-sizing: border-box;
-  width: min(320px, calc(100vw - 42px));
+  width: min(380px, calc(100vw - 42px));
   max-height: calc(100vh - 88px);
   margin-right: 18px;
   padding: 10px;
@@ -85,9 +85,8 @@ export const PANEL_STYLES = `
 }
 
 .opx-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  display: flex;
+  gap: 2px;
   margin-bottom: 0;
   padding: 3px;
   border: 1px solid rgba(148, 163, 184, 0.16);
@@ -96,6 +95,7 @@ export const PANEL_STYLES = `
 }
 
 .opx-tab {
+  flex: auto;
   height: 30px;
   min-width: 0;
   border: 0;
@@ -104,11 +104,12 @@ export const PANEL_STYLES = `
   color: #94a3b8;
   cursor: pointer;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 650;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 0 4px;
 }
 
 .opx-tab.is-active {
@@ -307,6 +308,12 @@ export const PANEL_STYLES = `
 .opx-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.opx-grid-1-3 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
   gap: 8px;
 }
 
@@ -782,6 +789,64 @@ export const PANEL_STYLES = `
   font-size: 11px;
   line-height: 15px;
   overflow-wrap: anywhere;
+}
+
+.opx-guide-box {
+  margin: 0 0 10px;
+  padding: 10px;
+  border: 1px dashed rgba(47, 209, 124, 0.44);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.82);
+}
+
+.opx-guide-title {
+  color: #bbf7d0;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.opx-guide-links {
+  display: grid;
+  gap: 6px;
+}
+
+.opx-guide-link {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid rgba(47, 209, 124, 0.28);
+  border-radius: 6px;
+  background: rgba(47, 209, 124, 0.08);
+  color: #93e4bd;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.opx-guide-link:hover {
+  border-color: rgba(47, 209, 124, 0.68);
+  background: rgba(47, 209, 124, 0.16);
+  color: #bbf7d0;
+}
+
+.opx-guide-link.is-active {
+  border-color: #2fd17c;
+  background: rgba(47, 209, 124, 0.22);
+  color: #86efac;
+  font-weight: 700;
+}
+
+.opx-guide-link.is-active::after {
+  content: "●";
+  color: #2fd17c;
+  font-size: 10px;
+  margin-left: auto;
 }
 
 @media (max-height: 640px) {

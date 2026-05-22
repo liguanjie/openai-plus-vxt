@@ -34,10 +34,10 @@ export function createPanel(root: ShadowRoot, registerController: RegisterContro
   const tabs = document.createElement('div');
   tabs.className = 'opx-tabs';
 
-  const registerTab = createTab('register', '注册');
-  const linkTab = createTab('link', '提链接');
-  const addressTab = createTab('address', '地址');
-  const smsTab = createTab('sms', '接码');
+  const registerTab = createTab('register', '登录/注册 (JP)');
+  const linkTab = createTab('link', '提链接 (JP)');
+  const addressTab = createTab('address', '地址 (US)');
+  const smsTab = createTab('sms', '接码 (US)');
   tabs.append(registerTab, linkTab, addressTab, smsTab);
 
   const settingsButton = document.createElement('button');

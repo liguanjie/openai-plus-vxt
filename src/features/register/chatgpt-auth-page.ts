@@ -13,7 +13,19 @@ const SUBMIT_SELECTORS = [
 ];
 
 export function isChatGptLoginPage(): boolean {
-  return location.hostname === 'chatgpt.com' && location.pathname.startsWith('/auth/login');
+  if (location.hostname !== 'chatgpt.com') {
+    return false;
+  }
+  if (location.pathname.startsWith('/auth/login')) {
+    return true;
+  }
+  return EMAIL_SELECTORS.some((selector) => {
+    const el = document.querySelector(selector);
+    if (!el) return false;
+    const style = window.getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+  });
 }
 
 export async function fillEmailAndContinue(email: string): Promise<ActionResult> {
