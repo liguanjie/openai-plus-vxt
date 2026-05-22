@@ -48,7 +48,7 @@ const DEFAULT_LINK_STATE: LinkExtractorState = {
 const DEFAULT_SMS_RELAY_STATE: SmsRelayState = {
   rawInput: '',
   history: [],
-  isPollingActive: true,
+  isPollingActive: false,
   updatedAt: 0,
 };
 

@@ -49,7 +49,7 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
   let lastSavedInput = '';
   let inputSaveTimer: number | null = null;
   let inputFocused = false;
-  let isPollingActive = true;
+  let isPollingActive = false;
 
   container.append(
     summary,
