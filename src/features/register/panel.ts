@@ -11,12 +11,6 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
   serviceLabel.className = 'opx-label';
   serviceLabel.textContent = '邮箱服务';
   
-  const serviceGroup = document.createElement('div');
-  serviceGroup.style.display = 'grid';
-  serviceGroup.style.gridTemplateColumns = 'minmax(0, 3fr) minmax(0, 1fr)';
-  serviceGroup.style.gap = '8px';
-  serviceGroup.style.alignItems = 'start';
-  
   const serviceSelect = document.createElement('select');
   serviceSelect.className = 'opx-select';
   const optOutlook = document.createElement('option');
@@ -27,14 +21,7 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
   optCfTemp.textContent = 'Cloudflare Temp Email';
   serviceSelect.append(optOutlook, optCfTemp);
   
-  const deployBtn = createButton('部署');
-  deployBtn.style.marginBottom = '8px';
-  deployBtn.addEventListener('click', () => {
-    window.open('https://github.com/vual/cloudflare-temp-email', '_blank');
-  });
-  
-  serviceGroup.append(serviceSelect, deployBtn);
-  serviceField.append(serviceLabel, serviceGroup);
+  serviceField.append(serviceLabel, serviceSelect);
 
   // 2. 邮箱生成 Row
   const generatorField = document.createElement('div');
@@ -316,8 +303,11 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
     domainSelect.value = saved.cfTempEmailSelectedDomain;
 
     // Toggle Collapsible Accordion display
-    const isCfUsed = saved.cfTempEmailService === 'cloudflare-temp' || saved.cfTempEmailGenerator === 'cloudflare-temp';
+    const isCfUsed = saved.cfTempEmailGenerator === 'cloudflare-temp';
     configAccordion.style.display = isCfUsed ? 'block' : 'none';
+    if (isCfUsed) {
+      configAccordion.open = true;
+    }
 
     // Update Email Textarea structure based on generator choice
     if (saved.cfTempEmailGenerator === 'cloudflare-temp') {
