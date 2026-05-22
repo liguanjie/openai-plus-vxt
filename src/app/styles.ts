@@ -183,23 +183,36 @@ export const PANEL_STYLES = `
   box-sizing: border-box;
   min-width: 0;
   height: 28px;
-  border: 0;
+  border: 1px solid rgba(47, 209, 124, 0.44);
   border-radius: 6px;
-  background: #2fd17c;
-  color: #04130a;
+  background: rgba(47, 209, 124, 0.16);
+  color: #86efac;
   cursor: pointer;
   font: inherit;
   font-size: 11px;
-  font-weight: 750;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.opx-mini-button:hover {
+  background: rgba(47, 209, 124, 0.26);
+  border-color: rgba(47, 209, 124, 0.72);
+  color: #dcfce7;
 }
 
 .opx-mini-button-secondary {
-  border: 1px solid rgba(47, 209, 124, 0.34);
-  background: rgba(15, 23, 42, 0.72);
-  color: #93e4bd;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.54);
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.opx-mini-button-secondary:hover {
+  border-color: rgba(148, 163, 184, 0.32);
+  color: #94a3b8;
 }
 
 .opx-view {
@@ -360,18 +373,42 @@ export const PANEL_STYLES = `
   margin: 0 0 10px;
   border: 0;
   border-radius: 6px;
-  background: #2fd17c;
+  background: linear-gradient(135deg, #2fd17c 0%, #10b981 100%);
   color: #04130a;
   cursor: pointer;
   font: inherit;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(47, 209, 124, 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.opx-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3ae08b 0%, #05c485 100%);
+  box-shadow: 0 6px 16px rgba(47, 209, 124, 0.3);
+  transform: translateY(-1px);
+}
+
+.opx-button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .opx-button-secondary {
-  background: #182235;
+  background: rgba(148, 163, 184, 0.06);
   color: #93e4bd;
   border: 1px solid rgba(47, 209, 124, 0.36);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.opx-button-secondary:hover:not(:disabled) {
+  background: rgba(47, 209, 124, 0.14);
+  border-color: rgba(47, 209, 124, 0.65);
+  color: #bbf7d0;
+  transform: translateY(-1px);
+}
+
+.opx-button-secondary:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .opx-button:disabled {

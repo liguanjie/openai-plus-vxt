@@ -168,10 +168,11 @@ export function createRegisterPanel(container: HTMLElement, controller: Register
   domainSelect.style.flex = '1';
   domainSelect.style.marginBottom = '0';
   
-  const syncDomainsBtn = createButton('更新');
+  const syncDomainsBtn = createButton('更新', 'opx-button opx-button-secondary');
   syncDomainsBtn.style.width = 'auto';
   syncDomainsBtn.style.padding = '0 12px';
   syncDomainsBtn.style.marginBottom = '0';
+  syncDomainsBtn.style.height = '36px';
   
   domainGroup.append(domainSelect, syncDomainsBtn);
   domainField.append(domainLabel, domainGroup);
