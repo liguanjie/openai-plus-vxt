@@ -80,6 +80,7 @@ export function createSmsPanel(container: HTMLElement): FeaturePanelHandle {
       stopPolling();
       updateButtonState();
       setStatus(status, '已停止接收。输入内容已自动保存。', 'pending');
+      await persistInputNow();
       renderTargetsFromInput();
     } else {
       isPollingActive = true;
